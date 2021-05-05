@@ -85,7 +85,7 @@ public:
     double step_point_lz_, step_point_rz_, step_point_lthta_, step_point_rthta_;
     double vx0_, vy0_, px_, py_, pz_;
     double lpx_, rpx_, lpy_, rpy_, lpz_, rpz_, lpt_, rpt_;
-    // double T_DSP_;
+
     bool plot_once_, if_finish_;
     
     int name_cont_;

@@ -339,7 +339,6 @@ WalkingGaitByLIPM::WalkingGaitByLIPM()
     plot_once_ = false;
     ready_to_stop_ = false;
     name_cont_ = 0;
-    // T_DSP_ = 0.35; 
 }
 WalkingGaitByLIPM::~WalkingGaitByLIPM()
 {    }
@@ -398,21 +397,18 @@ void WalkingGaitByLIPM::resetParameter()
     last_length_ = 0;
     last_shift_ = 0;
     last_theta_ = 0;
-    now_width_ = 0; 
-    // T_DSP_ = 0.35;
+    now_width_ = 0;
 }
 
 void WalkingGaitByLIPM::process()
 {
-    double T_DSP_ = 0.3;
-    // double T_DSP_ = parameterinfo->parameters.OSC_LockRange;
-    T_DSP_ = parameterinfo->parameters.OSC_LockRange;
+    double T_DSP = 0;
     if(!is_parameter_load_)
     {
         step_length_ = parameterinfo->X;
         shift_length_ = parameterinfo->Y;
         period_t_ = parameterinfo->parameters.Period_T;
-        T_DSP_ = parameterinfo->parameters.OSC_LockRange;
+        T_DSP = parameterinfo->parameters.OSC_LockRange;
         if((theta_ >= 0) && ((pre_step_ % 2) == 1))
         {
             theta_ = parameterinfo->THTA;
@@ -486,9 +482,7 @@ void WalkingGaitByLIPM::process()
         ready_to_stop_ = false;
     }
 
-    if(now_step_ <= 1)
-    //     parameterinfo->complan.walking_state = FirstStep;
-    // else if(now_step_ == 2 || now_step_ == 3)
+    if(now_step_ == 0)
         parameterinfo->complan.walking_state = StartStep;
     else if(now_step_ == step_)
         parameterinfo->complan.walking_state = StopStep;
@@ -498,104 +492,36 @@ void WalkingGaitByLIPM::process()
         plot_once_ = true;
         parameterinfo->complan.walking_stop = true;
         parameterinfo->walking_mode = 0;
-
+        resetParameter();
+        saveData();
     }
     else
         parameterinfo->complan.walking_state = Repeat;
     
     switch (parameterinfo->complan.walking_state)
     {
-    // case FirstStep:
-    //     now_length_ = 0;
-    //     vx0_ = wComVelocityInit(0, step_length_/2, now_length_, TT_, Tc_);
-    //     px_ = wComPosition(0, vx0_, now_length_, t_, Tc_);
-    //     vy0_ = wComVelocityInit(0, now_shift_+shift_length_/2, now_shift_+now_width_, TT_, Tc_);
-    //     py_ = wComPosition(0, vy0_, now_shift_+now_width_, t_, Tc_);
-        
-    //     if((now_step_ % 2 == 0))
-    //     {
-    //         lpx_ = wFootPosition(0, step_length_, t_, TT_, T_DSP);
-    //         rpx_ = 0;
-    //         lpy_ = wFootPosition(now_left_shift_, shift_length_, t_, TT_, T_DSP);
-    //         rpy_ = 0;
-    //         lpz_ = wFootPositionZ(lift_height_*1/5, t_, TT_, T_DSP);
-    //         rpz_ = 0;
-    //         if(theta_<0)
-    //         {
-    //             lpt_ = 0;
-    //             rpt_ = 0;
-    //         }
-    //         else
-    //         {
-    //             lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP);
-    //             rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP);
-    //         }
-    //     }
-    //     else if((now_step_ % 2 == 1))
-    //     {
-    //         lpx_ = 0;
-    //         rpx_ = wFootPosition(0, step_length_, t_, TT_, T_DSP);
-    //         lpy_ = 0;
-    //         rpy_ = wFootPosition(now_left_shift_, shift_length_, t_, TT_, T_DSP);
-    //         lpz_ = 0;
-    //         rpz_ = wFootPositionZ(lift_height_*1/5, t_, TT_, T_DSP);
-    //         if(theta_<0)
-    //         {
-    //             lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP);
-    //             rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP);
-    //         }
-    //         else
-    //         {
-    //             lpt_ = 0;
-    //             rpt_ = 0;
-    //         }
-    //     }
-    //     break;
-
     case StartStep:
         now_length_ = 0;
-        vx0_ = wComVelocityInit(0, step_length_*2/3, now_length_, TT_, Tc_);
+        vx0_ = wComVelocityInit(0, step_length_/2, now_length_, TT_, Tc_);
         px_ = wComPosition(0, vx0_, now_length_, t_, Tc_);
         vy0_ = wComVelocityInit(0, now_shift_+shift_length_/2, now_shift_+now_width_, TT_, Tc_);
         py_ = wComPosition(0, vy0_, now_shift_+now_width_, t_, Tc_);
         
-        if((now_step_ % 2 == 0))
+        lpx_ = wFootPosition(0, step_length_, t_, TT_, T_DSP);
+        rpx_ = 0;
+        lpy_ = wFootPosition(now_left_shift_, shift_length_, t_, TT_, T_DSP);
+        rpy_ = 0;
+        lpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP);
+        rpz_ = 0;
+        if(theta_<0)
         {
-            lpx_ = wFootPosition(0, step_length_, t_, TT_, T_DSP_);
-            rpx_ = 0;
-            lpy_ = wFootPosition(now_left_shift_, shift_length_, t_, TT_, T_DSP_);
-            rpy_ = 0;
-            lpz_ = wFootPositionZ(lift_height_*1/2, t_, TT_, T_DSP_);
-            rpz_ = 0;
-            if(theta_<0)
-            {
-                lpt_ = 0;
-                rpt_ = 0;
-            }
-            else
-            {
-                lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP_);
-                rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP_);
-            }
+            lpt_ = 0;
+            rpt_ = 0;
         }
-        else if((now_step_ % 2 == 1))
+        else
         {
-            lpx_ = 0;
-            rpx_ = wFootPosition(0, step_length_, t_, TT_, T_DSP_);
-            lpy_ = 0;
-            rpy_ = wFootPosition(now_left_shift_, shift_length_, t_, TT_, T_DSP_);
-            lpz_ = 0;
-            rpz_ = wFootPositionZ(lift_height_*1/2, t_, TT_, T_DSP_);
-            if(theta_<0)
-            {
-                lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP_);
-                rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP_);
-            }
-            else
-            {
-                lpt_ = 0;
-                rpt_ = 0;
-            }
+            lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP);
+            rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP);
         }
         break;
 
@@ -608,11 +534,11 @@ void WalkingGaitByLIPM::process()
         if((now_step_ % 2) == 1)
         {
             lpx_ = now_length_;
-            rpx_ = wFootPosition(now_right_length_, (last_step_length_+step_length_)/2, t_, TT_, T_DSP_);
+            rpx_ = wFootPosition(now_right_length_, (last_step_length_+step_length_)/2, t_, TT_, T_DSP);
             lpy_ = now_left_shift_;
-            rpy_ = wFootPosition(now_right_shift_, (last_shift_length_+shift_length_)/2, t_, TT_, T_DSP_);
+            rpy_ = wFootPosition(now_right_shift_, (last_shift_length_+shift_length_)/2, t_, TT_, T_DSP);
             lpz_ = 0;
-            rpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP_);
+            rpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP);
             if(theta_<0)
             {
                 lpt_ = 0;
@@ -620,22 +546,22 @@ void WalkingGaitByLIPM::process()
             }
             else
             {
-                lpt_ = wFootTheta(abs_theta_, 1, t_, TT_, T_DSP_);
-                rpt_ = wFootTheta(-abs_theta_, 1, t_, TT_, T_DSP_);
+                lpt_ = wFootTheta(abs_theta_, 1, t_, TT_, T_DSP);
+                rpt_ = wFootTheta(-abs_theta_, 1, t_, TT_, T_DSP);
             }
         }
         else if((now_step_ % 2) == 0)
         {
-            lpx_ = wFootPosition(now_left_length_, (last_step_length_+step_length_)/2, t_, TT_, T_DSP_);
+            lpx_ = wFootPosition(now_left_length_, (last_step_length_+step_length_)/2, t_, TT_, T_DSP);
             rpx_ = now_length_;
-            lpy_ = wFootPosition(now_left_shift_, (last_shift_length_+shift_length_)/2, t_, TT_, T_DSP_);
+            lpy_ = wFootPosition(now_left_shift_, (last_shift_length_+shift_length_)/2, t_, TT_, T_DSP);
             rpy_ = now_right_shift_;
-            lpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP_);
+            lpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP);
             rpz_ = 0;
             if(theta_<0)
             {
-                lpt_ = wFootTheta(abs_theta_, 1, t_, TT_, T_DSP_);
-                rpt_ = wFootTheta(-abs_theta_, 1, t_, TT_, T_DSP_);
+                lpt_ = wFootTheta(abs_theta_, 1, t_, TT_, T_DSP);
+                rpt_ = wFootTheta(-abs_theta_, 1, t_, TT_, T_DSP);
             }
             else
             {
@@ -654,17 +580,17 @@ void WalkingGaitByLIPM::process()
         if((now_step_ % 2) == 1)
         {
             lpx_ = now_length_;
-            rpx_ = wFootPositionRepeat(now_right_length_, (last_step_length_+step_length_)/2, t_, TT_, T_DSP_);
+            rpx_ = wFootPositionRepeat(now_right_length_, (last_step_length_+step_length_)/2, t_, TT_, T_DSP);
             lpy_ = now_left_shift_;
-            rpy_ = wFootPositionRepeat(now_right_shift_, (last_shift_length_+shift_length_)/2, t_, TT_, T_DSP_);
+            rpy_ = wFootPositionRepeat(now_right_shift_, (last_shift_length_+shift_length_)/2, t_, TT_, T_DSP);
             lpz_ = 0;
-            rpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP_);
+            rpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP);
             if(theta_*last_theta_ >= 0)
             {
                 if(theta_<0)
                 {
-                    lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP_);
-                    rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP_);
+                    lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP);
+                    rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP);
                 }
                 else
                 {
@@ -675,8 +601,8 @@ void WalkingGaitByLIPM::process()
                     }
                     else
                     {
-                        lpt_ = wFootTheta(abs_theta_, 1, t_, TT_, T_DSP_);
-                        rpt_ = wFootTheta(-abs_theta_, 1, t_, TT_, T_DSP_);
+                        lpt_ = wFootTheta(abs_theta_, 1, t_, TT_, T_DSP);
+                        rpt_ = wFootTheta(-abs_theta_, 1, t_, TT_, T_DSP);
                     }
                 }
             }
@@ -688,23 +614,23 @@ void WalkingGaitByLIPM::process()
         }
         else if((now_step_ % 2) == 0)
         {
-            lpx_ = wFootPositionRepeat(now_left_length_, (last_step_length_+step_length_)/2, t_, TT_, T_DSP_);
+            lpx_ = wFootPositionRepeat(now_left_length_, (last_step_length_+step_length_)/2, t_, TT_, T_DSP);
             rpx_ = now_length_;
-            lpy_ = wFootPositionRepeat(now_left_shift_, (last_shift_length_+shift_length_)/2, t_, TT_, T_DSP_);
+            lpy_ = wFootPositionRepeat(now_left_shift_, (last_shift_length_+shift_length_)/2, t_, TT_, T_DSP);
             rpy_ = now_right_shift_;
-            lpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP_);
+            lpz_ = wFootPositionZ(lift_height_, t_, TT_, T_DSP);
             rpz_ = 0;
             if(theta_*last_theta_ >= 0)
             {
                 if(theta_<0)
                 {
-                    lpt_ = wFootTheta(abs_theta_, 1, t_, TT_, T_DSP_);
-                    rpt_ = wFootTheta(-abs_theta_, 1, t_, TT_, T_DSP_);
+                    lpt_ = wFootTheta(abs_theta_, 1, t_, TT_, T_DSP);
+                    rpt_ = wFootTheta(-abs_theta_, 1, t_, TT_, T_DSP);
                 }
                 else
                 {
-                    lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP_);
-                    rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP_);
+                    lpt_ = wFootTheta(abs_theta_, 0, t_, TT_, T_DSP);
+                    rpt_ = wFootTheta(-abs_theta_, 0, t_, TT_, T_DSP);
                 }
             }
             else
@@ -738,9 +664,8 @@ void WalkingGaitByLIPM::process()
         step_point_rz_ = COM_HEIGHT;
         step_point_lthta_ = 0;
         step_point_rthta_ = 0;
+
         if_finish_ = true;
-        resetParameter(); 
-        saveData();
     }
     else
     {

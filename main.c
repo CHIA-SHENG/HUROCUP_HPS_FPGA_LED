@@ -5,7 +5,7 @@ refer to user manual chapter 7 for details about the demo
 */
 
 #include "include/main.h"
- 
+
 
 int main()
 {
@@ -15,17 +15,19 @@ int main()
 	sensor.fall_Down_Flag_ = false;
 	sensor.stop_Walk_Flag_ = false;
 
+	XM430_350_Controller_initialize();
 	balance.initialize(30);
 	usleep(1000 * 1000);
 	init.initial_system();
 	usleep(1000 * 1000);
 	IK.initial_inverse_kinematic();
 	walkinggait.initialize();
-
 	gettimeofday(&walkinggait.timer_start_, NULL);
 
 	while(1)
 	{
+
+		// printf(" ");
 		datamodule.load_database();
 		if(datamodule.motion_execute_flag_)
 			datamodule.motion_execute();

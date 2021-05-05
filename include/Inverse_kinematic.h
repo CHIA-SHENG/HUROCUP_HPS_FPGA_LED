@@ -22,6 +22,7 @@
 #include "DataModule.h"
 #include "Rmotor.h"
 #include "PID_Controller.h"
+#include "XM430_350_controller.h"
 /********************************************************/
 
 /******************* Define******************************/

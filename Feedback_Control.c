@@ -64,15 +64,15 @@ void BalanceControl::initialize(const int control_cycle_msec)
 
     PIDleftfoot_hip_roll.setValueLimit(300, -300);
     PIDleftfoot_hip_pitch.setValueLimit(300, -300);
-    PIDleftfoot_hip_roll.setKpid(0, 0, 0);//(0.005,0,0.003);//(0.03, 0.01, 0.01);//(0.03, 0.01, 0.015); //0.02, 0.01, 0.01 //0.03, 0, 0.02
-    PIDleftfoot_hip_pitch.setKpid(0.02, 0, 0.005);//(0.03, 0, 0.02);  //0.03, 0, 0.02
+    PIDleftfoot_hip_roll.setKpid(0.03, 0, 0.01);//(0.03, 0.01, 0.015); //0.02, 0.01, 0.01 //0.03, 0, 0.02
+    PIDleftfoot_hip_pitch.setKpid(0, 0, 0);//(0.03, 0, 0.02);  //0.03, 0, 0.02
     PIDleftfoot_hip_roll.setControlGoal(init_imu_value[(int)imu::roll].pos);
     PIDleftfoot_hip_pitch.setControlGoal(init_imu_value[(int)imu::pitch].pos);
 
 	PIDrightfoot_hip_roll.setValueLimit(300, -300);
     PIDrightfoot_hip_pitch.setValueLimit(300, -300);
-    PIDrightfoot_hip_roll.setKpid(0, 0, 0);//(0.005,0,0.003);//(0.03, 0.01, 0.01);//(0.03, 0.01, 0.015); //0.02, 0.01, 0.01 //0.03, 0, 0.02
-    PIDrightfoot_hip_pitch.setKpid(0.02, 0, 0.005);//(0.03, 0, 0.02);  //0.03, 0, 0.02
+    PIDrightfoot_hip_roll.setKpid(0.03, 0, 0.01);//(0.03, 0.01, 0.015); //0.02, 0.01, 0.01 //0.03, 0, 0.02
+    PIDrightfoot_hip_pitch.setKpid(0, 0, 0);//(0.03, 0, 0.02);  //0.03, 0, 0.02
     PIDrightfoot_hip_roll.setControlGoal(init_imu_value[(int)imu::roll].pos);
     PIDrightfoot_hip_pitch.setControlGoal(init_imu_value[(int)imu::pitch].pos);
 
@@ -586,28 +586,11 @@ void BalanceControl::control_after_ik_calculation()
 	if(Points.Inverse_PointR_Y < 0 && (original_ik_point_rz_ != original_ik_point_lz_))
 	{
 		// Points.Thta[10] = PI_2 - (Points.Thta[10] - PI_2) *1;
-		// Points.Thta[16] = PI_2 + (Points.Thta[16] - PI_2) *1;
-		// Points.Thta[10] *= 0.95;
-		// Points.Thta[16] *= 1.05;	
-		// if(parameterinfo->complan.walking_state == FirstStep)
-		// {
-		// 	Points.Thta[10] *= 1.02;
-		// 	Points.Thta[16] *= 1.03;
-		// 	Points.Thta[14] *= 1.03;
-		// 	Points.Thta[20] *= 1.02;
-		// 	// Points.Thta[10] *= 1.001;
-		// 	// Points.Thta[16] *= 1.002;
-		// 	// Points.Thta[14] *= 1.002;
-		// 	// Points.Thta[20] *= 1.001;
-		// }
-		// else
-		// {
-			Points.Thta[10] *= 0.95;
-			Points.Thta[16] *= 1.05;
-		// }
-		// double tmp = (Points.Thta[10] * 1.060) - Points.Thta[10];
-		// Points.Thta[10] -= tmp;
-		// Points.Thta[16] *= 1.030;//1.025;
+		// Points.Thta[16] = PI_2 + (Points.Thta[16] - PI_2) *1;			
+		
+		double tmp = (Points.Thta[10] * 1.060) - Points.Thta[10];
+		Points.Thta[10] -= tmp;
+		Points.Thta[16] *= 1.030;//1.025;
  
 
 		// double tmp = (Points.Thta[10] * 1.05) - Points.Thta[10];
@@ -623,23 +606,10 @@ void BalanceControl::control_after_ik_calculation()
 	{
 		// Points.Thta[10] = PI_2 + (Points.Thta[10] - PI_2) *1;
 		// Points.Thta[16] = PI_2 - (Points.Thta[16] - PI_2) *1;	
-		// Points.Thta[10] *= 0.95;
-		// Points.Thta[16] *= 1.05;	
-		// if(parameterinfo->complan.walking_state == StartStep)
-		// {
-		// 	Points.Thta[10] *= 0.97;
-		// 	Points.Thta[16] *= 0.9;
-		// 	Points.Thta[14] *= 0.9;
-		// 	Points.Thta[20] *= 0.97;
-		// }
-		// else
-		// {
-			Points.Thta[10] *= 0.95;
-			Points.Thta[16] *= 1.05;
-		// }
-		// double tmp = (Points.Thta[10] * 1.065) - Points.Thta[10];
-		// Points.Thta[10] -= tmp;
-		// Points.Thta[16] *= 1.035;//1.025;
+
+		double tmp = (Points.Thta[10] * 1.065) - Points.Thta[10];
+		Points.Thta[10] -= tmp;
+		Points.Thta[16] *= 1.035;//1.025;
 
 		// double tmp = (Points.Thta[10] * 1.05) - Points.Thta[10];
 		// Points.Thta[10] -= tmp;

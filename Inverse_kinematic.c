@@ -157,10 +157,15 @@ InverseKinematic::InverseKinematic()
 	std::vector<double> temp;
 	// if(map_motor.empty())
 	// {
-		map_motor["motor_11"] = temp;
-        map_motor["motor_15"] = temp;
-        map_motor["motor_17"] = temp;
-        map_motor["motor_21"] = temp;
+		// map_motor["motor_11"] = temp;
+        // map_motor["motor_15"] = temp;
+        // map_motor["motor_17"] = temp;
+        // map_motor["motor_21"] = temp;
+		map_motor["initial_position"] = temp;
+        map_motor["state[0]"] = temp;
+        map_motor["state[1]"] = temp;
+        map_motor["state[2]"] = temp;
+		map_motor["velocity_command"] = temp;
 	// }
 }
 
@@ -498,15 +503,15 @@ void InverseKinematic::calculate_inverse_kinematic(int Motion_Delay)
         Points.Thta[20] = PI - Points.Thta[16]-rotate_body_l_;
 
 // be
-	map_motor.find("motor_11")->second.push_back(Points.Thta[10] * PI_TO_OUTPUT);
-	map_motor.find("motor_15")->second.push_back(Points.Thta[14] * PI_TO_OUTPUT);
-	map_motor.find("motor_17")->second.push_back(Points.Thta[16] * PI_TO_OUTPUT);
-	map_motor.find("motor_21")->second.push_back(Points.Thta[20] * PI_TO_OUTPUT);
+	// map_motor.find("motor_11")->second.push_back(Points.Thta[10] * PI_TO_OUTPUT);
+	// map_motor.find("motor_15")->second.push_back(Points.Thta[14] * PI_TO_OUTPUT);
+	// map_motor.find("motor_17")->second.push_back(Points.Thta[16] * PI_TO_OUTPUT);
+	// map_motor.find("motor_21")->second.push_back(Points.Thta[20] * PI_TO_OUTPUT);
 
-	if(old_walking_stop == false && parameterinfo->complan.walking_stop == true)
-	{
-		saveData();
-	}
+	// if(old_walking_stop == false && parameterinfo->complan.walking_stop == true)
+	// {
+	// 	saveData();
+	// }
 	old_walking_stop = parameterinfo->complan.walking_stop;
 
 // end
@@ -519,6 +524,8 @@ void InverseKinematic::calculate_inverse_kinematic(int Motion_Delay)
 		kickinggait.hipPitchControl();
 	}
 
+	/* Save result */
+	map_motor.find("initial_position")->second.push_back(datamodule.totalangle_[18]);
     for( i = 0; i < 21; i++)
     {
 		// if(i==12)
@@ -538,15 +545,32 @@ void InverseKinematic::calculate_inverse_kinematic(int Motion_Delay)
         }
         output_angle_[i] += output_base_[i];
 
-        double different_thta;
-        different_thta = fabs( past_thta_[i] - Points.Thta[i]);
-        if(different_thta > 0.0)
-        {
-        	delay_time_[i] = (unsigned int)(different_thta/(2*PI) * (1000/Motion_Delay) * 60 / 0.229);	// ((percent of circle(rad)) / ((delta t/1000)*60(min))) / 0.229(rpm/unit)
-        }
-        past_thta_[i] = Points.Thta[i];
-        output_speed_[i] = delay_time_[i]  * SPEED_TRANS;
-        output_speed_[i] = output_speed_[i] * speed_gain_[i];
+		/* Tracking point */
+		rtU.ref_pos = output_angle_[i];
+		rtU.present_position = rtRegister.last_output_angle_[i];
+		rtU.initial_position = (double)datamodule.totalangle_[i];
+		rtU.state_hat[0] = rtRegister.state_last[i*3];
+		rtU.state_hat[1] = rtRegister.state_last[i*3+1];
+		rtU.state_hat[2] = rtRegister.state_last[i*3+2];
+		rtY.Integrator_STATE = rtRegister.last_Integrator_STATE[i];
+		XM430_350_Controller();
+		output_speed_[i] = rtY.velocity_command;
+		rtRegister.last_output_angle_[i] = rtY.position_command;
+		rtRegister.state_last[i*3] = rtY.state[0];
+  		rtRegister.state_last[i*3+1] = rtY.state[1];
+  		rtRegister.state_last[i*3+2] = rtY.state[2];
+		rtRegister.last_Integrator_STATE[i] = rtY.Integrator_STATE;
+
+
+        // double different_thta;
+        // different_thta = fabs( past_thta_[i] - Points.Thta[i]);
+        // if(different_thta > 0.0)
+        // {
+        // 	delay_time_[i] = (unsigned int)(different_thta/(2*PI) * (1000/Motion_Delay) * 60 / 0.229);	// ((percent of circle(rad)) / ((delta t/1000)*60(min))) / 0.229(rpm/unit)
+        // }
+        // past_thta_[i] = Points.Thta[i];
+        // output_speed_[i] = delay_time_[i]  * SPEED_TRANS;
+        // output_speed_[i] = output_speed_[i] * speed_gain_[i];
 		//----------------------printf-----------------------------
         #ifdef Auto_Stand
             if(i == 10 || i == 11 || i == 12 || i == 13 || i == 14   || i == 16 || i == 17 || i == 18 || i == 19)
@@ -577,6 +601,12 @@ void InverseKinematic::calculate_inverse_kinematic(int Motion_Delay)
 		*((uint32_t *)init.robot_motion_addr+(2*i)) = output_angle_[i];
 		// printf("32\n");
     }
+	/* Save result */
+	map_motor.find("state[0]")->second.push_back(rtY.state[0]);
+	map_motor.find("state[1]")->second.push_back(rtY.state[1]);
+	map_motor.find("state[2]")->second.push_back(rtY.state[2]);
+	map_motor.find("velocity_command")->second.push_back(output_speed_[18]);
+	saveData();
 	// printf("\n");
 	*((uint32_t *)init.robot_motion_addr+(42)) = Motion_Delay;
 	*((uint32_t *)init.robot_motion_addr+(43)) = 0x00000070;
@@ -670,6 +700,7 @@ void InverseKinematic::calculate_inverse_kinematic(int Motion_Delay)
 	for(i=0; i<6; i++)
 	{
 		packet_char_[21+i*9] = i+16;      //MotorID
+		
 		packet_char_[22+i*9] = output_speed_[i+15] & 0xFF;    //Profile Velocity      //initial value = 0
 		packet_char_[23+i*9] = (output_speed_[i+15] >> 8) & 0xFF;
 		packet_char_[24+i*9] = (output_speed_[i+15] >> 16) & 0xFF;
