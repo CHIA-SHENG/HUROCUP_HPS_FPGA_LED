@@ -50,6 +50,7 @@ int main()
 		if (balance.two_feet_grounded_ && sensor.fall_Down_Flag_)
 		{
 			sensor.stop_Walk_Flag_ = true;
+			XM430_350_Controller_initialize();
 		}else
 		{
 			sensor.stop_Walk_Flag_ = false;

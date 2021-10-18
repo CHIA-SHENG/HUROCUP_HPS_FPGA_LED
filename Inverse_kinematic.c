@@ -607,6 +607,11 @@ void InverseKinematic::calculate_inverse_kinematic(int Motion_Delay)
 	map_motor.find("state[2]")->second.push_back(rtY.state[2]);
 	map_motor.find("velocity_command")->second.push_back(output_speed_[18]);
 	saveData();
+	if(old_walking_stop == false && parameterinfo->complan.walking_stop == true)
+	{
+		saveData();
+	}
+	old_walking_stop = parameterinfo->complan.walking_stop;
 	// printf("\n");
 	*((uint32_t *)init.robot_motion_addr+(42)) = Motion_Delay;
 	*((uint32_t *)init.robot_motion_addr+(43)) = 0x00000070;
